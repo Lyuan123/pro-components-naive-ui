@@ -1,6 +1,8 @@
 import type { ComputedRef } from 'vue'
-import { computed, ref, watch } from 'vue'
 import type { ProTreeProps } from '../props'
+import { watchImmediate } from '@vueuse/core'
+import { computed, ref } from 'vue'
+import { call } from '../../_utils/call'
 
 export interface UseExpandKeysOptions {
   /**
@@ -8,25 +10,24 @@ export interface UseExpandKeysOptions {
    */
   keyToNodeMap: ComputedRef<Map<string | number, Record<string, any>>>
 }
-export function useExpandKeys(props: ProTreeProps, options: UseExpandKeysOptions) {
+export function useExpandKeys(props: ComputedRef<ProTreeProps>, options: UseExpandKeysOptions) {
   const { keyToNodeMap } = options
   const expandedKeys = ref<Array<string | number>>([])
 
-  watch(
-    computed(() => props.expandedKeys),
+  watchImmediate(
+    computed(() => props.value.expandedKeys),
     (keys) => { expandedKeys.value = keys ?? [] },
-    { immediate: true },
   )
 
-  function doUpdateExpandedKeys(keys: Array<string | number>, ...args: any[]) {
+  function doUpdateExpandedKeys(keys: Array<string & number>, option?: any, meta?: any) {
     const {
       onUpdateExpandedKeys,
       'onUpdate:expandedKeys': _onUpdateExpandedKeys,
-    } = props
+    } = props.value
 
     expandedKeys.value = keys
-    onUpdateExpandedKeys && (onUpdateExpandedKeys as any)(keys, ...args)
-    _onUpdateExpandedKeys && (_onUpdateExpandedKeys as any)(keys, ...args)
+    onUpdateExpandedKeys && call(onUpdateExpandedKeys, keys, option, meta)
+    _onUpdateExpandedKeys && call(_onUpdateExpandedKeys, keys, option, meta)
   }
 
   function getExpandedKeys() {

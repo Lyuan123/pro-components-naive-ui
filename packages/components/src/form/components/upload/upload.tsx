@@ -1,13 +1,15 @@
 import type { SlotsType } from 'vue'
-import { ProField, ValueTypeEnum } from '../field'
-import { proUploadProps } from './props'
 import type { ProUploadSlots } from './slots'
-import { useProUploadInst } from './inst'
-import { convertValueToFile } from './utils/file'
+import { useOverrideProps } from '../../../composables'
+import { ProField, ValueTypeEnum } from '../field'
 import ProFieldUpload from './fields/field-upload'
+import { useProUploadInst } from './inst'
+import { proUploadProps } from './props'
+import { convertValueToFile } from './utils/file'
 
+const name = 'ProUpload'
 export default defineComponent({
-  name: 'ProUpload',
+  name,
   props: proUploadProps,
   slots: Object as SlotsType<ProUploadSlots>,
   setup(props, { expose }) {
@@ -16,30 +18,40 @@ export default defineComponent({
       methods,
     ] = useProUploadInst()
 
-    function postState(val: any) {
-      return convertValueToFile(val, props.postState)
+    const overridedProps = useOverrideProps(
+      name,
+      props,
+    )
+
+    function postValue(val: any) {
+      return convertValueToFile(val, overridedProps.value.postValue)
     }
 
     expose(methods)
     return {
       instRef,
-      postState,
+      postValue,
+      overridedProps,
     }
   },
   render() {
     return (
       <ProField
-        {...this.$props}
+        {...this.overridedProps}
         defaultValue={[]}
         valueModelName="fileList"
         valueType={ValueTypeEnum.UPLOAD}
-        postState={this.postState}
+        postValue={this.postValue}
       >
         {{
           ...this.$slots,
-          input: (pureProps: any) => {
-            return <ProFieldUpload ref="instRef" {...pureProps} v-slots={this.$slots} />
-          },
+          input: (pureProps: any) => [
+            <ProFieldUpload
+              ref="instRef"
+              {...pureProps}
+              v-slots={this.$slots}
+            />,
+          ],
         }}
       </ProField>
     )

@@ -5,8 +5,8 @@
 </markdown>
 
 <script lang="tsx">
+import { ProSelect, useInjectProFormInst } from 'pro-components-naive-ui'
 import { defineComponent, ref } from 'vue'
-import { ProSelect, useInjectProFormInst, useProFormInst } from 'pro-components-naive-ui'
 
 function delay(time: number) {
   return new Promise(resolve => setTimeout(resolve, time))
@@ -16,7 +16,7 @@ const LinkageComp = defineComponent({
   render() {
     return (
       <ProSelect
-        label="联动选择框"
+        title="联动选择框"
         path="linkage"
         field-props={{
           options: [
@@ -33,7 +33,7 @@ const AsyncOptionsComp = defineComponent({
   setup() {
     const loading = ref(false)
     const options = ref<any[]>([])
-    const { getFieldValue, restoreFieldValue } = useInjectProFormInst()
+    const { getFieldValue, restoreFieldValue } = useInjectProFormInst()!
 
     async function reqAsyncOptions(val: number) {
       console.log(val)
@@ -61,7 +61,7 @@ const AsyncOptionsComp = defineComponent({
   render() {
     return (
       <ProSelect
-        label="异步选择框"
+        title="异步选择框"
         path="select"
         field-props={{
           loading: this.loading,

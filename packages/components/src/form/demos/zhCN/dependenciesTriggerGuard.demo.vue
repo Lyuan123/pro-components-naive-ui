@@ -5,8 +5,8 @@
 </markdown>
 
 <script lang="tsx">
-import { defineComponent } from 'vue'
 import { useMessage } from 'naive-ui'
+import { defineComponent } from 'vue'
 
 export default defineComponent({
   setup() {
@@ -27,11 +27,11 @@ export default defineComponent({
 <template>
   <pro-form label-placement="left" label-width="auto">
     <pro-input
-      label="输入看效果"
+      title="输入看效果"
       path="input"
     />
     <pro-input
-      label="拦截校验"
+      title="拦截校验"
       path="object"
       required
       :dependencies="{

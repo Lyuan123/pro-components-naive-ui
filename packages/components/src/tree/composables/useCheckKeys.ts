@@ -1,6 +1,8 @@
 import type { ComputedRef } from 'vue'
-import { computed, ref, watch } from 'vue'
 import type { ProTreeProps } from '../props'
+import { watchImmediate } from '@vueuse/core'
+import { computed, ref } from 'vue'
+import { call } from '../../_utils/call'
 
 export interface UseCheckKeysOptions {
   /**
@@ -8,25 +10,24 @@ export interface UseCheckKeysOptions {
    */
   keyToNodeMap: ComputedRef<Map<string | number, Record<string, any>>>
 }
-export function useCheckKeys(props: ProTreeProps, options: UseCheckKeysOptions) {
+export function useCheckKeys(props: ComputedRef<ProTreeProps>, options: UseCheckKeysOptions) {
   const { keyToNodeMap } = options
   const checkedKeys = ref<Array<string | number>>([])
 
-  watch(
-    computed(() => props.checkedKeys),
+  watchImmediate(
+    computed(() => props.value.checkedKeys),
     (keys) => { checkedKeys.value = keys ?? [] },
-    { immediate: true },
   )
 
-  function doUpdateCheckedKeys(keys: Array<string | number>, ...args: any[]) {
+  function doUpdateCheckedKeys(keys: Array<string & number>, option?: any, meta?: any) {
     const {
       onUpdateCheckedKeys,
       'onUpdate:checkedKeys': _onUpdateCheckedKeys,
-    } = props
+    } = props.value
 
     checkedKeys.value = keys
-    onUpdateCheckedKeys && (onUpdateCheckedKeys as any)(keys, ...args)
-    _onUpdateCheckedKeys && (_onUpdateCheckedKeys as any)(keys, ...args)
+    onUpdateCheckedKeys && call(onUpdateCheckedKeys, keys, option, meta)
+    _onUpdateCheckedKeys && call(_onUpdateCheckedKeys, keys, option, meta)
   }
 
   function getCheckedKeys() {

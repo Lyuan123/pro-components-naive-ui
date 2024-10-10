@@ -1,15 +1,15 @@
 import type { SlotsType } from 'vue'
-import { Fragment, computed, defineComponent } from 'vue'
-import { NFlex } from 'naive-ui'
+import type { ProFieldSlots } from './slots'
 import { pick } from 'lodash-es'
+import { NFlex } from 'naive-ui'
+import { computed, defineComponent, Fragment } from 'vue'
 import { ProFormItem } from '../form-item'
 import { ProPopoverFormItem } from '../popover-form-item'
-import { proFieldProps } from './props'
-import type { ProFieldSlots } from './slots'
-import { useParseProps } from './composables/useParseProps'
 import { createField } from './composables/createField'
-import { fieldExtraKey } from './keys'
 import { useMergeOptions } from './composables/useMergeOptions'
+import { useParseProps } from './composables/useParseProps'
+import { fieldExtraKey } from './keys'
+import { proFieldProps } from './props'
 
 export default defineComponent({
   name: 'ProField',
@@ -68,7 +68,6 @@ export default defineComponent({
       mergedReadonly,
       mergedBehavior,
       mergedShowLabel,
-      mergedFieldProps,
       mergedPlaceholder,
       mergedBehaviorProps,
     } = useMergeOptions({
@@ -76,7 +75,6 @@ export default defineComponent({
       label,
       field,
       valueType,
-      fieldProps,
       readonly: parsedReadonly,
       showLabel: parsedShowLabel,
       placeholder: parsedPlaceholder,
@@ -101,19 +99,27 @@ export default defineComponent({
       const eventName = `onUpdate${name.slice(0, 1).toUpperCase()}${name.slice(1)}`
       return {
         [name]: value.value,
-        [eventName]: doUpdateValue,
+        [eventName]: (inputValue: any, ...args: any[]) => {
+          if (Object.is(inputValue, value.value)) {
+            return
+          }
+          const { onInputValue } = props
+          onInputValue
+            ? onInputValue(value, inputValue, ...args)
+            : doUpdateValue(inputValue)
+        },
       }
     })
 
     const fieldBindProps = computed(() => {
       if (mergedPlaceholder.value === undefined) {
         return {
-          ...mergedFieldProps.value,
+          ...(fieldProps.value ?? {}),
           ...fieldVModelProps.value,
         }
       }
       return {
-        ...mergedFieldProps.value,
+        ...(fieldProps.value ?? {}),
         ...fieldVModelProps.value,
         placeholder: mergedPlaceholder.value,
       }

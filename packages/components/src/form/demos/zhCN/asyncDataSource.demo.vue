@@ -5,8 +5,8 @@
 </markdown>
 
 <script lang="tsx">
-import { defineComponent, ref } from 'vue'
 import { useProFormInst } from 'pro-components-naive-ui'
+import { defineComponent, ref } from 'vue'
 
 function delay(time: number) {
   return new Promise(resolve => setTimeout(resolve, time))
@@ -49,7 +49,7 @@ export default defineComponent({
     @submit="console.log"
   >
     <pro-select
-      label="联动选择框"
+      title="联动选择框"
       path="linkage"
       :field-props="{
         options: [
@@ -60,7 +60,7 @@ export default defineComponent({
       @change="reqAsyncOptions"
     />
     <pro-select
-      label="异步选择框"
+      title="异步选择框"
       path="select"
       :field-props="{
         loading,

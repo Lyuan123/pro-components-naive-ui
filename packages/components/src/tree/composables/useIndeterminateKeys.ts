@@ -1,6 +1,8 @@
 import type { ComputedRef } from 'vue'
-import { computed, ref, watch } from 'vue'
 import type { ProTreeProps } from '../props'
+import { watchImmediate } from '@vueuse/core'
+import { computed, ref } from 'vue'
+import { call } from '../../_utils/call'
 
 export interface UseIndeterminateKeysOptions {
   /**
@@ -8,28 +10,24 @@ export interface UseIndeterminateKeysOptions {
    */
   keyToNodeMap: ComputedRef<Map<string | number, Record<string, any>>>
 }
-export function useIndeterminateKeys(
-  props: ProTreeProps,
-  options: UseIndeterminateKeysOptions,
-) {
+export function useIndeterminateKeys(props: ComputedRef<ProTreeProps>, options: UseIndeterminateKeysOptions) {
   const { keyToNodeMap } = options
   const indeterminateKeys = ref<Array<string | number>>([])
 
-  watch(
-    computed(() => props.indeterminateKeys),
+  watchImmediate(
+    computed(() => props.value.indeterminateKeys),
     (keys) => { indeterminateKeys.value = keys ?? [] },
-    { immediate: true },
   )
 
-  function doUpdateIndeterminateKeys(keys: Array<string | number>, ...args: any[]) {
+  function doUpdateIndeterminateKeys(keys: Array<string & number>, option?: any) {
     const {
       onUpdateIndeterminateKeys,
       'onUpdate:indeterminateKeys': _onUpdateIndeterminateKeys,
-    } = props
+    } = props.value
 
     indeterminateKeys.value = keys
-    onUpdateIndeterminateKeys && (onUpdateIndeterminateKeys as any)(keys, ...args)
-    _onUpdateIndeterminateKeys && (_onUpdateIndeterminateKeys as any)(keys, ...args)
+    onUpdateIndeterminateKeys && call(onUpdateIndeterminateKeys, keys, option)
+    _onUpdateIndeterminateKeys && call(_onUpdateIndeterminateKeys, keys, option)
   }
 
   function getIndeterminateKeys() {
