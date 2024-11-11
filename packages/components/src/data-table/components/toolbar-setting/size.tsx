@@ -1,12 +1,12 @@
 import type { DropdownOption } from 'naive-ui'
-import type { VNodeChild } from 'vue'
+import type { MergedToolbarDensity } from './composables/userMergeToolbarSetting'
 import { ColumnHeightOutlined } from '@vicons/antd'
 import { NDropdown, NEl, NFlex, NIcon, useThemeVars } from 'naive-ui'
 import { defineComponent, watchEffect } from 'vue'
 import { ProButton } from '../../../button'
 import { useLocale } from '../../../locales'
-import { useMergeToolbarSetting } from './composables/userMergeToolbarSetting'
 import { useInjectProDataTableInst } from '../../context'
+import { useMergeToolbarSetting } from './composables/userMergeToolbarSetting'
 
 export default defineComponent({
   name: 'Size',
@@ -23,15 +23,17 @@ export default defineComponent({
     } = useLocale('ProDataTable')
 
     const {
-      mergedDensity,
+      mergedDensity: _mergedDensity,
     } = useMergeToolbarSetting()
 
+    const mergedDensity = computed(() => {
+      return _mergedDensity.value as Exclude<MergedToolbarDensity, boolean>
+    })
+
     watchEffect(() => {
-      if (mergedDensity.value !== false) {
-        const defaultSize = mergedDensity.value.default
-        if (defaultSize) {
-          setTableSize(defaultSize)
-        }
+      const defaultSize = mergedDensity.value.default
+      if (defaultSize) {
+        setTableSize(defaultSize)
       }
     })
 
@@ -45,13 +47,13 @@ export default defineComponent({
     }
   },
   render() {
-    const { mergedDensity } = this
+    const { renderIcon } = this.mergedDensity
 
     const renderLabel = (option: DropdownOption) => {
       if (option.key === this.getTableSize()) {
         return <NEl style={{ color: this.selectedColor }}>{option.label}</NEl>
       }
-      return option.label as VNodeChild
+      return option.label
     }
 
     return (
@@ -72,14 +74,14 @@ export default defineComponent({
             label: this.getMessage('settingDensSmall'),
           },
         ]}
-        renderLabel={renderLabel}
         onSelect={this.setTableSize}
+        renderLabel={renderLabel as any}
       >
         <NFlex>
           <ProButton text={true} tooltip={this.getMessage('settingDens')}>
             {
-              mergedDensity !== false && mergedDensity.renderIcon
-                ? mergedDensity.renderIcon()
+              renderIcon
+                ? renderIcon()
                 : (
                     <NIcon size={18}>
                       <ColumnHeightOutlined />

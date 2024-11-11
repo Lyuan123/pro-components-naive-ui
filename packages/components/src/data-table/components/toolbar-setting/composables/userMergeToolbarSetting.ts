@@ -1,9 +1,11 @@
+import type { VNodeChild } from 'vue'
 import type { ProDataTableToolbarSetting } from '../../../types'
 import { useInjectProDataTableProps } from '../../../context'
 
-type MergedToolbarReload = (Exclude<ProDataTableToolbarSetting['reload'], boolean | undefined>) | false
-type MergedToolbarDensity = (Exclude<ProDataTableToolbarSetting['density'], boolean | undefined>) | false
-type MergedToolbarColumnSetting = (Exclude<ProDataTableToolbarSetting['columnSetting'], boolean | undefined>) | false
+type RenderIcon = () => VNodeChild
+export type MergedToolbarReload = (ProDataTableToolbarSetting['reload'] & {}) | false
+export type MergedToolbarDensity = ((Required<Omit<ProDataTableToolbarSetting['density'] & {}, 'renderIcon'>>) & { renderIcon?: RenderIcon }) | false
+export type MergedToolbarColumnSetting = (Required<Omit<ProDataTableToolbarSetting['columnSetting'] & {}, 'renderIcon'>> & { renderIcon: RenderIcon }) | false
 
 export function useMergeToolbarSetting() {
   const proDataTableProps = useInjectProDataTableProps()!
@@ -13,7 +15,7 @@ export function useMergeToolbarSetting() {
       if (val === false) {
         return false
       }
-      if (val === true || val === undefined) {
+      if (val === undefined) {
         return {}
       }
       return val
@@ -46,7 +48,7 @@ export function useMergeToolbarSetting() {
     }
     return {
       default: 'medium',
-      ...setting.density,
+      ...setting.density as any,
     }
   })
 
@@ -60,7 +62,7 @@ export function useMergeToolbarSetting() {
       checkable: true,
       resetButton: true,
       indexColummn: true,
-      ...setting.columnSetting,
+      ...setting.columnSetting as any,
     }
   })
 
@@ -68,8 +70,8 @@ export function useMergeToolbarSetting() {
     mergedReload,
     mergedDensity,
     mergedColumnSetting,
-    showReload: computed(() => mergedReload.value === false),
-    showDensity: computed(() => mergedDensity.value === false),
-    showColumnSetting: computed(() => mergedColumnSetting.value === false),
+    showReload: computed(() => mergedReload.value !== false),
+    showDensity: computed(() => mergedDensity.value !== false),
+    showColumnSetting: computed(() => mergedColumnSetting.value !== false),
   }
 }

@@ -6,7 +6,7 @@ import type { ProDataTableSlots } from './slots'
 import { NDataTable, NFlex } from 'naive-ui'
 import { uid } from 'pro-components-hooks'
 import { defineComponent } from 'vue'
-import { resolveWrappedSlot } from '../_utils/resolve-slot'
+import { resolveSlotWithProps, resolveWrappedSlot } from '../_utils/resolve-slot'
 import { ProCard } from '../card'
 import { useOmitProps, useOverrideProps } from '../composables'
 import { ProSearchForm, useProSearchFormInst } from './components/search-form'
@@ -29,9 +29,8 @@ const name = 'ProDataTable'
 export default defineComponent({
   name,
   props: proDataTableProps,
-  inheritAttrs: false,
   slots: Object as SlotsType<ProDataTableSlots>,
-  setup(props, { expose }) {
+  setup(props, { slots, expose }) {
     const overridedProps = useOverrideProps(
       name,
       props,
@@ -158,10 +157,30 @@ export default defineComponent({
       }
     })
 
+    /**
+     * 包裹表格的卡片如果没有头部区域，则取消 padding
+     */
+    const unTableCardPadding = computed(() => {
+      const {
+        title,
+        tooltip,
+        tableCardProps = {},
+      } = overridedProps.value
+
+      return !title
+        && !slots.title
+        && !slots.toolbar
+        && !(tableCardProps ?? {}).title
+        && (!tooltip || tooltip.length <= 0)
+        && (!tableCardProps.tooltip || tableCardProps.tooltip.length <= 0)
+        && !tableCardProps.headerExtra
+    })
+
     const headerCardProps = computed<ProCardProps>(() => {
       const {
         title,
         tooltip,
+        tableCardProps = {},
       } = overridedProps.value
 
       return {
@@ -170,6 +189,12 @@ export default defineComponent({
         triggerAreas: [],
         segmented: false,
         showCollapse: false,
+        ...tableCardProps,
+        contentStyle: {
+          ...(unTableCardPadding.value ? { padding: 0 } : {}),
+          // @ts-ignore
+          ...(tableCardProps.contentStyle ?? {}),
+        },
       }
     })
 
@@ -254,22 +279,23 @@ export default defineComponent({
                     </NFlex>
                   )
                 },
-                'default': () => [
-                  resolveWrappedSlot(
-                    this.$slots.extra,
-                    (children) => {
-                      if (!children) {
-                        return null
-                      }
-                      return <div style={{ marginBlockEnd: '16px' }}>{children}</div>
-                    },
-                  ),
-                  <NDataTable
-                    ref="nDataTableInst"
-                    {...this.nDataTableProps}
-                    v-slots={this.$slots}
-                  />,
-                ],
+                'default': () => {
+                  const tableDom = (
+                    <NDataTable
+                      ref="nDataTableInst"
+                      {...this.nDataTableProps}
+                      v-slots={this.$slots}
+                    />
+                  )
+                  return [
+                    resolveWrappedSlot(this.$slots.extra, (children) => {
+                      return children
+                        ? <div style={{ marginBlockEnd: '16px' }}>{children}</div>
+                        : null
+                    }),
+                    resolveSlotWithProps(this.$slots.table, { tableDom }, () => tableDom),
+                  ]
+                },
               }}
             </ProCard>,
           ]
